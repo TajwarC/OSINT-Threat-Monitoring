@@ -52,9 +52,22 @@ class ThreatPDFReport(FPDF):
         self.cell(0, 10, f"Page {self.page_no()} | OSINT Threat Monitoring Prototype", align="C")
 
 
+@st.cache_resource
 def get_db_manager() -> HybridStorageManager:
     """Instantiates and returns the DB manager."""
     return HybridStorageManager(db_url="sqlite:///osint_threats.db", qdrant_path="./data/qdrant")
+
+
+@st.cache_resource
+def get_risk_engine() -> RiskEngine:
+    """Instantiates and returns the Risk Engine."""
+    return RiskEngine()
+
+
+@st.cache_resource
+def get_extractor() -> ThreatExtractor:
+    """Instantiates and returns the NLP Threat Extractor."""
+    return ThreatExtractor()
 
 
 def populate_mock_data_if_empty(manager: HybridStorageManager):
@@ -193,7 +206,7 @@ def main():
             border: 1px solid #2d313f;
         }
         </style>
-    """, unsafe_allow_key_html=True)
+    """, unsafe_allow_html=True)
 
     st.title("🛡️ AI-Driven OSINT Threat Monitoring Dashboard")
     st.subheader("Prototype Operator Console")
@@ -201,8 +214,8 @@ def main():
     # Initialize Backend
     manager = get_db_manager()
     populate_mock_data_if_empty(manager)
-    risk_engine = RiskEngine()
-    extractor = ThreatExtractor()
+    risk_engine = get_risk_engine()
+    extractor = get_extractor()
 
     # Sidebar: Model Config and Dynamic Weights tuning
     st.sidebar.header("🔧 Parameters & Weights")

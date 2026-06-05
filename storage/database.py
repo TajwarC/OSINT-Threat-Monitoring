@@ -22,6 +22,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Set up logging
 logger = logging.getLogger("storage")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # SQLAlchemy base and model definitions
 Base = declarative_base()
@@ -62,14 +64,22 @@ class FallbackEncoder:
         self.vector_dim = vector_dim
 
     def encode(self, texts: List[str], normalize_embeddings: bool = True) -> np.ndarray:
+        threat_keywords = {
+            "ransomware", "zero-day", "zero", "day", "exploit", "exploits", "phishing", "malware",
+            "cyberattack", "vulnerability", "vulnerabilities", "breach", "leak", "spyware",
+            "backdoor", "trojan", "apt", "espionage", "ddos", "compromise", "attack"
+        }
         embeddings = []
         for text in texts:
-            words = text.lower().split()
+            # Clean punctuation and split
+            cleaned_text = text.lower().replace("-", " ").replace(".", " ").replace(",", " ")
+            words = cleaned_text.split()
             vec = np.zeros(self.vector_dim)
             for word in words:
                 # Use standard hash to map words deterministically
                 idx = hash(word) % self.vector_dim
-                vec[idx] += 1.0
+                weight = 15.0 if word in threat_keywords else 1.0
+                vec[idx] += weight
             norm = np.linalg.norm(vec)
             if norm > 0:
                 vec = vec / norm
@@ -269,6 +279,18 @@ if __name__ == "__main__":
         published_at: datetime
         metadata: MockMetadata
         raw_payload: Dict[str, Any]
+
+    import shutil
+    # Clean up test database & vector files from previous run to avoid unique constraint violations
+    for path in ["test_osint_threats.db", "./test_data"]:
+        if os.path.exists(path):
+            try:
+                if os.path.isdir(path):
+                    shutil.rmtree(path)
+                else:
+                    os.remove(path)
+            except Exception:
+                pass
 
     manager = HybridStorageManager(db_url="sqlite:///test_osint_threats.db", qdrant_path="./test_data/qdrant")
 
