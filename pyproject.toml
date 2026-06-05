@@ -1,0 +1,24 @@
+[project]
+name = "osint-threat-monitoring"
+version = "0.1.0"
+description = "AI-Driven OSINT Threat Monitoring Prototype"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "apscheduler==3.11.2",
+    "feedparser==6.0.12",
+    "fpdf2==2.8.7",
+    "httpx==0.28.1",
+    "instructor==1.15.1",
+    "mitreattack-python==6.1.0",
+    "numpy==2.4.6",
+    "pyattck==5.4.0",
+    "pydantic==2.13.4",
+    "qdrant-client==1.18.0",
+    "scipy==1.17.1",
+    "sentence-transformers==5.5.1",
+    "sqlalchemy==2.0.50",
+    "stix2==3.0.2",
+    "streamlit==1.58.0",
+    "taxii2-client==2.3.0",
+]
